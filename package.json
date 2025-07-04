@@ -2,7 +2,6 @@
   "name": "email_sender",
   "version": "1.0.0",
   "main": "oracleConnection.js",
-  "devDependencies": {},
   "scripts": {
     "test": "oracleConnection.js"
   },
@@ -11,6 +10,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "dotenv": "^17.0.1",
     "oracledb": "^6.8.0"
   }
 }

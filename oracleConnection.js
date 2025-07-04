@@ -1,11 +1,12 @@
+require('dotenv').config();
 const oracledb = require('oracledb');
 
 oracledb.initOracleClient({ libDir: 'C:/instantclient_23_0/instantclient_23_8' });
 
 const dbConfig = {
-  user: 'tasy',
-  password: 'aloisk',
-  connectString: '10.0.0.111:1521/tasy1'
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  connectString: process.env.DB_CONNECT_STRING
 };
 
 async function testQuery() {
