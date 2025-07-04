@@ -1,7 +1,7 @@
 {
   "name": "email_sender",
   "version": "1.0.0",
-  "main": "oracleConnection.js",
+  "main": "app.js",
   "scripts": {
     "test": "oracleConnection.js"
   },
