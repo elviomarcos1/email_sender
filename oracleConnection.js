@@ -28,5 +28,13 @@ async function checkConnection() {
     }
   }
 }
-
 checkConnection();
+
+async function getConnection() {
+  return await oracledb.getConnection(dataBaseConfig)
+}
+
+module.exports = {
+  getConnection
+}
+
