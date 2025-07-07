@@ -9,7 +9,7 @@ const dataBaseConfig = {
   connectString: process.env.DB_CONNECT_STRING
 };
 
-async function checkConnection() {
+/*async function checkConnection() {
   let connection;
   try {
     // aqui usamos o config correto
@@ -28,7 +28,7 @@ async function checkConnection() {
     }
   }
 }
-checkConnection();
+checkConnection();*/
 
 async function getConnection() {
   return await oracledb.getConnection(dataBaseConfig)

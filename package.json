@@ -5,6 +5,7 @@
   "scripts": {
     "test": "oracleConnection.js"
   },
+  "type": "commonjs",
   "keywords": [],
   "author": "",
   "license": "ISC",
