@@ -2,7 +2,7 @@ const oracledb = require('oracledb')
 const { getConnection } = require('./oracleConnection')
 const { sendEmail } = require('./emailSender');
 const { documentos } = require('./dataQueries')
-
+const schema = require('./dbSchema')
 
 async function processarDocumentos() {
   let connection;
@@ -15,37 +15,48 @@ async function processarDocumentos() {
     for (const row of result.rows) {
       console.log("🔍 Linha recebida:", row);
 
-      const assunto = `Vencimento do documento: ${row.NM_DOCUMENTO}`;
+      const assunto = `Vencimento do documento: ${row[schema.nomeDocumento]}`;
       const mensagem = `
-        Olá, o documento "${row.NM_DOCUMENTO}" da classificação "${row.DS_CLASSIFICACAO}"
-        está próximo do vencimento. Vigência: de ${new Date(row.DT_INICIO_VIGENCIA).toLocaleDateString()} 
-        até ${new Date(row.DT_FIM_VIGENCIA).toLocaleDateString()}.
-        Restam ${row.DIAS_VENCIMENTO}.
+        Olá, o documento "${row[schema.nomeDocumento]}" da classificação "${row[schema.classificaçãoDocumento]}"
+        está próximo do vencimento. Vigência: de ${new Date(row[schema.dataInicioVigenciaDocumento]).toLocaleDateString()} 
+        até ${new Date(row[schema.dataFimVigenciaDocumento]).toLocaleDateString()}.
+        Restam ${row[schema.diasParaVencimentoDocumento]}.
       `;
 
       let emailDestino;
-      if (row.CD_SETOR_ATENDIMENTO == 152) {
+      if (row[schema.setorResponsavel] == 152) {
         emailDestino = 'efjunior@unimedara.com.br';
-      } else if (row.CD_SETOR_ATENDIMENTO == 100) {
-        emailDestino = 'landrade@unimedara.com.br';
+      } else if (row[schema.setorResponsavel] == 100) {
+        emailDestino = 'efjunior@unimedara.com.br';
       } else {
-        console.warn(`⚠️ Setor não reconhecido: ${row.CD_SETOR_ATENDIMENTO}`);
+        console.warn(`⚠️ Setor não reconhecido: ${row[schema.setorResponsavel]}`);
         continue;
       }
-      console.log(`Valor do Email Desino: ${emailDestino}`)
       if (!emailDestino) {
-        console.error(`❌ Email de destino não definido para documento: ${row.NM_DOCUMENTO}`);
+        console.error(`❌ Email de destino não definido para documento: ${row[schema.nomeDocumento]}`);
         continue;
       }
 
+      const diasParaVencimento = parseInt(row[schema.diasParaVencimentoDocumento]);
+      let prioridadeEmail;
+
+      if(diasParaVencimento > 20) {
+        prioridadeEmail = 'B'
+      } else if(diasParaVencimento > 10) {
+        prioridadeEmail = 'M'
+      } else {
+        prioridadeEmail = 'A'
+      }
+
       try {
+        if(diasParaVencimento == 30 || diasParaVencimento == 20 || diasParaVencimento == 10 || diasParaVencimento < 0)
         await sendEmail({
-          assunto: "teste",
-          mensagem: "teste assunto",
-          remetente: "efjunior@unimedara.com.br",
+          assunto: assunto,
+          mensagem: mensagem,
+          remetente: process.env.SENDER_EMAIL,
           destinatario: emailDestino,
-          nmUsuario: "enviotasy",
-          prioridade: "M",
+          nmUsuario: process.env.TASY_USER,
+          prioridade: prioridadeEmail,
           cco: null
           });
 
