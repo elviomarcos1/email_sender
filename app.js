@@ -14,20 +14,33 @@ async function processarDocumentos() {
 
     for (const row of result.rows) {
       console.log("🔍 Linha recebida:", row);
+      let diasParaVencimento = parseInt(row[schema.diasParaVencimentoDocumento]);
+      let textoStatusDeVencimento;
+      if(diasParaVencimento > 0) {
+        textoStatusDeVencimento = `  Restam ${row[schema.diasParaVencimentoDocumento]} para o vencimento.`
+      } else if(diasParaVencimento == 0){
+        textoStatusDeVencimento = `  O documento atinge o fim de vigência HOJE.`
+      } else if(diasParaVencimento < 0){
+        let diasParaVencimentoPositivo = Math.abs(diasParaVencimento)
+        textoStatusDeVencimento = `  O documento encontra-se vencido há ${diasParaVencimentoPositivo} dia(s).`
+      } else {
+        `  ❌ Não foi possível calcular os dias de vencimento do documento. Por favor, entre em contato com o administrador do sistema.`
+      }
 
       const assunto = `Vencimento do documento: ${row[schema.nomeDocumento]}`;
-      const mensagem = `
+      let mensagem = `
         Olá, o documento "${row[schema.nomeDocumento]}" da classificação "${row[schema.classificaçãoDocumento]}"
         está próximo do vencimento. Vigência: de ${new Date(row[schema.dataInicioVigenciaDocumento]).toLocaleDateString()} 
         até ${new Date(row[schema.dataFimVigenciaDocumento]).toLocaleDateString()}.
-        Restam ${row[schema.diasParaVencimentoDocumento]}.
       `;
+
+      mensagem += textoStatusDeVencimento;
 
       let emailDestino;
       if (row[schema.setorResponsavel] == 152) {
-        emailDestino = 'efjunior@unimedara.com.br';
+        emailDestino = process.env.EMAIL_COMPRAS;
       } else if (row[schema.setorResponsavel] == 100) {
-        emailDestino = 'efjunior@unimedara.com.br';
+        emailDestino = process.env.EMAIL_SESMT;
       } else {
         console.warn(`⚠️ Setor não reconhecido: ${row[schema.setorResponsavel]}`);
         continue;
@@ -37,10 +50,9 @@ async function processarDocumentos() {
         continue;
       }
 
-      const diasParaVencimento = parseInt(row[schema.diasParaVencimentoDocumento]);
       let prioridadeEmail;
 
-      if(diasParaVencimento > 20) {
+      if(diasParaVencimento >= 20) {
         prioridadeEmail = 'B'
       } else if(diasParaVencimento > 10) {
         prioridadeEmail = 'M'
@@ -48,8 +60,11 @@ async function processarDocumentos() {
         prioridadeEmail = 'A'
       }
 
+      const DiasParaEnvioDeEmail = [30, 20, 10, 0, -10, -20, -30];
+
       try {
-        if(diasParaVencimento == 30 || diasParaVencimento == 20 || diasParaVencimento == 10 || diasParaVencimento < 0)
+
+        if(DiasParaEnvioDeEmail.includes(diasParaVencimento))
         await sendEmail({
           assunto: assunto,
           mensagem: mensagem,
@@ -59,7 +74,7 @@ async function processarDocumentos() {
           prioridade: prioridadeEmail,
           cco: null
           });
-
+        
         console.log(`📧 Email enviado para ${emailDestino} sobre documento ${row.NM_DOCUMENTO}`);
       } catch (error) {
         console.error("❌ Erro ao enviar e-mail:", error);
@@ -74,14 +89,6 @@ async function processarDocumentos() {
   }
 }
 
-processarDocumentos();
-
-/*sendEmail({
-  assunto: "teste",
-  mensagem: "assunto",
-  remetente: "efjunior@unimedara.com.br",
-  destinatario: "efjunior@unimedara.com.br",
-  nmUsuario: "efjunior",
-  prioridade: "M",
-  cco: null
-})*/
+module.exports = {
+  processarDocumentos
+}
