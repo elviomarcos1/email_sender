@@ -1,7 +1,8 @@
 {
   "name": "email_sender",
   "version": "1.0.0",
-  "main": "app.js",
+  "main": "cron.js",
+  "bin": "cron.js",
   "scripts": {
     "test": "oracleConnection.js"
   },
@@ -14,5 +15,15 @@
     "dotenv": "^17.0.1",
     "node-cron": "^4.2.0",
     "oracledb": "^6.8.0"
+  },
+  "devDependencies": {
+    "pkg": "^5.8.1"
+  },
+  "pkg": {
+    "targets": [
+      "node18-win-x64"
+    ],
+    "outputPath": "dist",
+    "output": "email_sender"
   }
 }

@@ -24,7 +24,7 @@ async function processarDocumentos() {
         let diasParaVencimentoPositivo = Math.abs(diasParaVencimento)
         textoStatusDeVencimento = `  O documento encontra-se vencido há ${diasParaVencimentoPositivo} dia(s).`
       } else {
-        `  ❌ Não foi possível calcular os dias de vencimento do documento. Por favor, entre em contato com o administrador do sistema.`
+        `  Não foi possível calcular os dias de vencimento do documento. Por favor, entre em contato com o administrador do sistema.`
       }
 
       const assunto = `Vencimento do documento: ${row[schema.nomeDocumento]}`;
@@ -72,7 +72,7 @@ async function processarDocumentos() {
           destinatario: emailDestino,
           nmUsuario: process.env.TASY_USER,
           prioridade: prioridadeEmail,
-          cco: null
+          cco: "efjunior@unimedara.com.br"
           });
         
         console.log(`📧 Email enviado para ${emailDestino} sobre documento ${row.NM_DOCUMENTO}`);
@@ -88,6 +88,8 @@ async function processarDocumentos() {
     }
   }
 }
+
+processarDocumentos()
 
 module.exports = {
   processarDocumentos

@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 const cron = require('node-cron')
 const { processarDocumentos } = require('./app')
 
