@@ -1,4 +1,3 @@
-require('dotenv').config();
 const oracledb = require('oracledb');
 
 oracledb.initOracleClient({ libDir: process.env.INSTANT_CLIENT_DIR });
@@ -9,26 +8,25 @@ const dataBaseConfig = {
   connectString: process.env.DB_CONNECT_STRING
 };
 
-/*async function checkConnection() {
+async function checkConnection() {
   let connection;
   try {
-    // aqui usamos o config correto
     connection = await oracledb.getConnection(dataBaseConfig);
-    console.log("✅ Conexão estabelecida com sucesso!");
+    console.log("Conexão estabelecida com sucesso...");
   } catch (error) {
-    console.error("❌ Falha na conexão: ", error);
+    console.error("Falha na conexão: ", error);
   } finally {
     if (connection) {
       try {
         await connection.close();
-        console.log("🔒 Conexão fechada após teste.");
+        console.log("\nConexão fechada após processamento...");
       } catch (closeError) {
-        console.error("❌ Erro ao fechar conexão: ", closeError);
+        console.error("Erro ao fechar conexão: ", closeError);
       }
     }
   }
 }
-checkConnection();*/
+checkConnection();
 
 async function getConnection() {
   return await oracledb.getConnection(dataBaseConfig)

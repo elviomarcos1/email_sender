@@ -37,8 +37,6 @@ async function sendEmail({
         cco
       }
     );
-
-    console.log("✅ E-mail enviado com sucesso!");
   } catch (error) {
     console.error("❌ Erro ao enviar e-mail:", error);
   } finally {
