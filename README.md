@@ -22,3 +22,7 @@ Fui responsável por:
 - Node.js (v18+)
 - Oracle Instant Client (Basic ou Basic Light)
 - Microsoft Visual C++ Redistributable x64
+
+- Comando para gerar EXECUTÁVEL:
+  npx pkg . --targets node18-win-x64 --output email_sender.exe
+
