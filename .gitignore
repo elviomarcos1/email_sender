@@ -1,3 +1,5 @@
 node_modules/
 .env
 dataQueries.js
+dbSchema.js
+email_sender.exe
