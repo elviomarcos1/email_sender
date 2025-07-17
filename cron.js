@@ -5,7 +5,7 @@ const envPath = path.join(process.cwd(), '.env');
 dotenv.config({ path: envPath });
 const { processarDocumentos } = require('./app')
 
-cron.schedule('* * * * *', async () => {
+cron.schedule('0 6 * * *', async () => {
     console.log('\n⏰ Executando tarefa do cron...')
     try {
         await processarDocumentos()
