@@ -3,3 +3,4 @@ node_modules/
 dataQueries.js
 dbSchema.js
 email_sender.exe
+/log-envios.txt

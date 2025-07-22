@@ -3,6 +3,7 @@ const { getConnection } = require('./oracleConnection')
 const { sendEmail } = require('./emailSender');
 const { documentos } = require('./dataQueries')
 const schema = require('./dbSchema')
+const {registrarLog} = require('./logs')
 
 async function processarDocumentos() {
 
@@ -18,15 +19,17 @@ async function processarDocumentos() {
     let quantidadeEmailsSegurancaDoTrabalho = 0
     let quantidadeEmailsMedicinaOcupacional = 0
 
+    let logDocumentos = '';
+
     for (const row of result.rows) {
 
       let diasParaVencimento = parseInt(row[schema.diasParaVencimentoDocumento]);
       let textoStatusDeVencimento;
       let palavraChave;
       
-      if (row[schema.tipoDocumento] != 4) {
+      if (row[schema.tipoDocumento] != 19) {
         palavraChave = "CNPJ: "
-      } else if(row[schema.tipoDocumento] == 4) {
+      } else if(row[schema.tipoDocumento] == 19) {
         palavraChave = "Obs: "
       } else {
         palavraChave = `Erro ao processar o campo "Palavra chave", entre em contato com o administrador do sistema`
@@ -64,36 +67,22 @@ async function processarDocumentos() {
 
       let emailDestino;
       
-      switch (grupo) {
-        case 4:
-        case 7:
-          emailDestino = process.env.EMAIL_COMPRAS
-          quantidadeEmailsCompras ++
-          break;
-
-        case 3:
-        case 11:
-          emailDestino = process.env.EMAIL_SESMT
-          quantidadeEmailsSesmt ++
-          break;
-
-        case 6:
-        case 8:
-          emailDestino = process.env.EMAIL_MEDICINA_OCUPACIONAL
-          quantidadeEmailsMedicinaOcupacional ++
-          break;
-
-        case 5:
-        case 9:
-          emailDestino = process.env.EMAIL_SEGURANCA_DO_TRABALHO
-          quantidadeEmailsSegurancaDoTrabalho ++
-          break;
-
-        default:
-          console.warn(`
+      if(grupo == 4 || grupo == 7) {
+        emailDestino = process.env.EMAIL_COMPRAS
+        quantidadeEmailsCompras ++
+      } else if(grupo == 3 || grupo == 11) {
+        emailDestino = process.env.EMAIL_SESMT
+        quantidadeEmailsSesmt ++
+      } else if(grupo == 6 || grupo == 8) {
+        emailDestino = process.env.EMAIL_MEDICINA_OCUPACIONAL
+        quantidadeEmailsMedicinaOcupacional ++
+      } else if(grupo == 5 || grupo == 9) {
+        emailDestino = process.env.EMAIL_SEGURANCA_DO_TRABALHO
+        quantidadeEmailsSegurancaDoTrabalho ++
+      } else {
+        console.warn(`
             Gerenciador de e-mails:
             Setor ou Grupo não reconhecidos: ${row[schema.setorResponsavelLiberacao]}, ${row[schema.descricaoGrupos]}`);
-        continue;
       }
 
       if (!emailDestino) {
@@ -119,19 +108,22 @@ async function processarDocumentos() {
       try {
 
         if(DiasParaEnvioDeEmail.includes(diasParaVencimento)){
-          console.log(`\nHorário do processamento: ${todayForm}`)
+          logDocumentos += (`Documento Listado: ${row[schema.codigoDocumento]} - ${row[schema.nomeDocumento]}(${row[schema.descricaoGrupos]}) -> ${emailDestino}
+                           Vencimento em: ${row[schema.diasParaVencimentoDocumento]}\n`)
 
-          var logEmails = `\nDocumento Listado: ${row[schema.codigoDocumento]} - ${row[schema.nomeDocumento]}(${row[schema.descricaoGrupos]}) -> ${emailDestino}
-          Vencimento em: ${row[schema.diasParaVencimentoDocumento]}`  
+          var log = (`============================= Log de E-mails ==============================\n
+                                          Horário do processamento: ${todayForm}
 
-          var logDeEnvios = `
+          ${logDocumentos}
           Resumo de envios: ${todayForm}
 
           Compras: ${quantidadeEmailsCompras} e-mail(s) enviado(s)
           SESMT: ${quantidadeEmailsSesmt} e-mail(s) enviado(s)
           Medicina Ocupacional: ${quantidadeEmailsMedicinaOcupacional} e-mail(s) enviado(s)
           Segurança do Trabalho: ${quantidadeEmailsSegurancaDoTrabalho} e-mail(s) enviado(s)
-          `
+
+=================================================================================================
+          `)
 
         await sendEmail({
           assunto: assunto,
@@ -143,7 +135,7 @@ async function processarDocumentos() {
           cco: "efjunior@unimedara.com.br"
           });
         
-        console.log(logEmails)
+        
         }
 
       } catch (error) {
@@ -153,8 +145,8 @@ async function processarDocumentos() {
   } catch (error) {
     console.error("Erro geral ao processar documentos:", error);
   } finally {
-
-    console.log(logDeEnvios)
+    console.log(log)
+    registrarLog(log)
 
     if (connection) {
       await connection.close();
@@ -162,6 +154,11 @@ async function processarDocumentos() {
   }
 }
 
-module.exports = {
-  processarDocumentos
-}
+    try {
+        processarDocumentos()
+        console.log('Tarefa concluída com sucesso!')
+    } catch (error) {
+        console.error('Erro ao executar tarefa do cron: ', error)
+    }
+
+    

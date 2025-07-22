@@ -38,7 +38,7 @@ async function sendEmail({
       }
     );
   } catch (error) {
-    console.error("❌ Erro ao enviar e-mail:", error);
+    console.error(" Erro ao enviar e-mail:", error);
   } finally {
     if (connection) {
       await connection.close();
