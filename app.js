@@ -1,9 +1,22 @@
 const oracledb = require('oracledb')
-const { getConnection } = require('./oracleConnection')
+const { getConnection } = require('./oracleConnection');
 const { sendEmail } = require('./emailSender');
 const { documentos } = require('./dataQueries')
 const schema = require('./dbSchema')
 const {registrarLog} = require('./logs')
+
+const path = require('path');
+const dotenv = require('dotenv');
+const envPath = path.join(process.cwd(), '.env');
+dotenv.config({ path: envPath });
+
+const dayjs = require('dayjs')
+const customParseFormat = require('dayjs/plugin/customParseFormat')
+dayjs.extend(customParseFormat)
+
+function formatarDataBrasileira(data) {
+  return dayjs(data).format('DD/MM/YYYY')
+}
 
 async function processarDocumentos() {
 
@@ -27,19 +40,6 @@ async function processarDocumentos() {
       let textoStatusDeVencimento;
       let palavraChave;
       
-      if (row[schema.tipoDocumento] != 19) {
-        palavraChave = "CNPJ: "
-      } else if(row[schema.tipoDocumento] == 19) {
-        palavraChave = "Obs: "
-      } else {
-        palavraChave = `Erro ao processar o campo "Palavra chave", entre em contato com o administrador do sistema`
-      }
-      
-      if (row[schema.palavraChave] == null) {
-        palavraChave = ""
-        row[schema.palavraChave] = ""
-      }
-      
       if(diasParaVencimento > 0) {
         textoStatusDeVencimento = `  Restam ${row[schema.diasParaVencimentoDocumento]} para o vencimento.`
       } else if(diasParaVencimento == 0){
@@ -57,38 +57,13 @@ async function processarDocumentos() {
           ${palavraChave} ${row[schema.palavraChave]}
           Grupo: ${row[schema.descricaoGrupos]}
           Classificação: ${row[schema.classificaçãoDocumento]}
-          Vigência Inicial: ${new Date(row[schema.dataInicioVigenciaDocumento]).toLocaleDateString()}
-          Vigência Final(Vencimento): ${new Date(row[schema.dataFimVigenciaDocumento]).toLocaleDateString()}
+          Vigência Inicial: ${formatarDataBrasileira(row[schema.dataInicioVigenciaDocumento])}
+          Vigência Final(Vencimento): ${formatarDataBrasileira(row[schema.dataFimVigenciaDocumento])}
         `;
      
       mensagem += textoStatusDeVencimento;
 
       const grupo = row[schema.indiceGrupo];
-
-      let emailDestino;
-      
-      if(grupo == 4 || grupo == 7) {
-        emailDestino = process.env.EMAIL_COMPRAS
-        quantidadeEmailsCompras ++
-      } else if(grupo == 3 || grupo == 11) {
-        emailDestino = process.env.EMAIL_SESMT
-        quantidadeEmailsSesmt ++
-      } else if(grupo == 6 || grupo == 8) {
-        emailDestino = process.env.EMAIL_MEDICINA_OCUPACIONAL
-        quantidadeEmailsMedicinaOcupacional ++
-      } else if(grupo == 5 || grupo == 9) {
-        emailDestino = process.env.EMAIL_SEGURANCA_DO_TRABALHO
-        quantidadeEmailsSegurancaDoTrabalho ++
-      } else {
-        console.warn(`
-            Gerenciador de e-mails:
-            Setor ou Grupo não reconhecidos: ${row[schema.setorResponsavelLiberacao]}, ${row[schema.descricaoGrupos]}`);
-      }
-
-      if (!emailDestino) {
-        console.error(`Email de destino não definido para documento: ${row[schema.nomeDocumento]}`);
-        continue;
-      }
 
       let prioridadeEmail;
 
@@ -103,11 +78,50 @@ async function processarDocumentos() {
       const DiasParaEnvioDeEmail = [30, 20, 10, 0, -10, -20, -30];
 
       const today = new Date()
-      const todayForm = today.toLocaleString('pt-BR')
+      const todayForm = formatarDataBrasileira(today)
+
+      let emailDestino;
 
       try {
-
+        
         if(DiasParaEnvioDeEmail.includes(diasParaVencimento)){
+          
+          if(grupo == 4 || grupo == 7) {
+            emailDestino = process.env.EMAIL_COMPRAS
+            quantidadeEmailsCompras ++
+          } else if(grupo == 3 || grupo == 11) {
+            emailDestino = process.env.EMAIL_SESMT
+            quantidadeEmailsSesmt ++
+          } else if(grupo == 6 || grupo == 8) {
+            emailDestino = process.env.EMAIL_MEDICINA_OCUPACIONAL
+            quantidadeEmailsMedicinaOcupacional ++
+          } else if(grupo == 5 || grupo == 9) {
+            emailDestino = process.env.EMAIL_SEGURANCA_DO_TRABALHO
+            quantidadeEmailsSegurancaDoTrabalho ++
+          } else {
+            console.warn(`
+                Gerenciador de e-mails:
+                Setor ou Grupo não reconhecidos: ${row[schema.setorResponsavelLiberacao]}, ${row[schema.descricaoGrupos]}`);
+          }
+
+          if (!emailDestino) {
+        console.error(`Email de destino não definido para documento: ${row[schema.nomeDocumento]}`);
+        continue;
+      }
+
+      if (row[schema.tipoDocumento] != 19) {
+        palavraChave = "CNPJ: "
+      } else if(row[schema.tipoDocumento] == 19) {
+        palavraChave = "Obs: "
+      } else {
+        palavraChave = `Erro ao processar o campo "Palavra chave", entre em contato com o administrador do sistema`
+      }
+
+      if (row[schema.palavraChave] == null) {
+        palavraChave = ""
+        row[schema.palavraChave] = ""
+      }
+
           logDocumentos += (`Documento Listado: ${row[schema.codigoDocumento]} - ${row[schema.nomeDocumento]}(${row[schema.descricaoGrupos]}) -> ${emailDestino}
                            Vencimento em: ${row[schema.diasParaVencimentoDocumento]}\n`)
 
@@ -134,8 +148,6 @@ async function processarDocumentos() {
           prioridade: prioridadeEmail,
           cco: "efjunior@unimedara.com.br"
           });
-        
-        
         }
 
       } catch (error) {

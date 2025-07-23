@@ -1,9 +1,10 @@
 {
   "name": "email_sender",
   "version": "1.0.0",
-  "main": "cron.js",
-  "bin": "cron.js",
+  "main": "app.js",
+  "bin": "app.js",
   "scripts": {
+    "start": "app.js",
     "test": "oracleConnection.js"
   },
   "type": "commonjs",
@@ -12,6 +13,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "dayjs": "^1.11.13",
     "dotenv": "^17.2.0",
     "node-cron": "^4.2.0",
     "oracledb": "^6.8.0"
@@ -20,6 +22,9 @@
     "pkg": "^5.8.1"
   },
   "pkg": {
+    "assets": [
+      ".env"
+    ],
     "targets": [
       "node18-win-x64"
     ],

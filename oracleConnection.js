@@ -1,5 +1,9 @@
 const oracledb = require('oracledb');
-require('dotenv').config()
+
+const path = require('path');
+const dotenv = require('dotenv');
+const envPath = path.join(process.cwd(), '.env');
+dotenv.config({ path: envPath });
 
 oracledb.initOracleClient({ libDir: process.env.INSTANT_CLIENT_DIR });
 
