@@ -1,28 +1,18 @@
-# 📧 Email Sender - Node.js + Oracle
+📧 Email Sender - Node.js + Oracle
+This project is a Node.js application designed to automate the sending of email notifications for documents approaching their expiration date, with full integration to an Oracle database (TASY - Philips).
 
-Este projeto foi desenvolvido em Node.js para automatizar o envio de e-mails de notificação sobre documentos próximos do vencimento, integrando com banco de dados Oracle (TASY).
+✨ Features
+Periodic query of documents close to expiration
 
-Fui responsável por:
-- Desenvolver toda a parte Node.js
-- Parametrizar e integrar a função PL/SQL `enviar_email` no TASY
-- Estruturar a consulta de documentos e lógica de prioridade
-- Empacotar o projeto para execução via `.exe` em VM
+Email notifications sent to specific departments (Purchasing or SESMT)
 
-## ✨ Funcionalidades
-- Consulta periódica de documentos perto do vencimento
-- Envio de e-mail para setores específicos (Compras ou SESMT)
-- Lógica de prioridade baseada na data de vencimento
-- Agendamento via `node-cron`
-- Configuração externa (.env) para dados sensíveis
+Priority logic based on expiration dates
 
----
+Scheduled execution using node-cron
 
-## ⚙️ Requisitos
+External .env configuration for sensitive data
 
-- Node.js (v18+)
-- Oracle Instant Client (Basic ou Basic Light)
-- Microsoft Visual C++ Redistributable x64
+⚙️ Architecture
+The application is structured to run scheduled tasks that query the Oracle database for documents nearing expiration. The results are processed according to a priority logic and then trigger an email sending process through the enviar_email PL/SQL function integrated with TASY.
 
-- Comando para gerar EXECUTÁVEL:
-  npx pkg . --targets node18-win-x64 --output email_sender.exe
-
+npx pkg . --targets node18-win-x64 --output email_sender.exe
